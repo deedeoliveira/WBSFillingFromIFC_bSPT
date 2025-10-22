@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+test_imports.py
+pyproject.toml
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Examples (dados de teste locais)
+examples/*.ifc
+examples/*.xlsx
+examples/*.json
+examples/*.csv
+
+# Build
+build.spec
+*.spec
+build.bat
+
+# Logs
+*.log
+
+#Other
+estrutura.txt
+.editorconfig.txt
