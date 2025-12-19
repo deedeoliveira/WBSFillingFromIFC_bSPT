@@ -1,13 +1,11 @@
 # WBS Filling From IFC
 
-![Version](https://img.shields.io/badge/version-0.1.0--beta-orange)
+![Version](https://img.shields.io/badge/version-0.1.1--beta-orange)
 ![Python](https://img.shields.io/badge/python-3.9+-blue)
 ![Platform](https://img.shields.io/badge/platform-Windows-lightgrey)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-Aplicação desktop para extração automática de quantidades de modelos IFC e preenchimento de estruturas WBS (Work Breakdown Structure) da buildingSMART Portugal.
-
-**Versão atual:** 0.1.0 (Beta)
+**Versão atual:** 0.1.1 (Beta)
 
 ---
 
@@ -22,7 +20,7 @@ Esta aplicação permite automatizar o processo de extração de quantidades de 
 ## Instalação para Usuários
 
 1. Baixe o executável da [página de recursos da buildingSMART Portugal](https://buildingsmart.pt/recursos/)
-2. Execute `WBSFillingFromIFC_bSPT_v0_1_0.exe`
+2. Execute `WBSFillingFromIFC_bSPT_v0_1_1.exe`
 
 ---
 
@@ -32,7 +30,7 @@ Esta aplicação permite automatizar o processo de extração de quantidades de 
 
 | Arquivo | Formato | Descrição |
 |---------|---------|-----------|
-| WBS Original | `.xlsx` | Estrutura WBS da buildingSMART Portugal |
+| WBS Original | `.xlsx` | Estrutura WBS (versão v01) da buildingSMART Portugal |
 | Modelo IFC | `.ifc` | Modelo BIM compatível com IFC 2x3 ou 4 |
 
 ### Fluxos de Trabalho
@@ -121,10 +119,6 @@ WBSFillingFromIFC_bSPT/
 └── README.md
 ```
 
-## Licença
-
-MIT License - Copyright (c) 2025 buildingSMART Portugal
-
 ---
 
 ## Autores e Contato
@@ -132,8 +126,6 @@ MIT License - Copyright (c) 2025 buildingSMART Portugal
 | Papel | Nome | Contato |
 |-------|------|---------|
 | **Desenvolvedora** | Andressa Oliveira | [LinkedIn](https://www.linkedin.com/in/andoliveira/) • [Email](mailto:soliveira.andressa@gmail.com) |
-| **Organização** | buildingSMART Portugal | [Website](https://buildingsmart.pt/) • [Email](mailto:geral@buildingsmart.pt) |
-
 ---
 
 ## Contribuições
@@ -142,4 +134,4 @@ Contribuições são bem-vindas.
 
 ---
 
-*Versão 0.1.0 - Outubro 2025*
+*Versão 0.1.1 - Dezembro 2025*

@@ -89,6 +89,7 @@ class WBSPage(tk.Frame):
             [("Excel (*.xlsx *.xls)", "*.xlsx *.xls")]
         )
 
+
     def on_load_wbs(self):
             path = self.app.wbs_xlsx_var.get().strip()
             if not path or not os.path.isfile(path):
@@ -100,16 +101,28 @@ class WBSPage(tk.Frame):
                 return
 
             try:
-                self.app.df_raw = pd.read_excel(path, header=1)
+                # Read the entire file without assuming header location
+                df_full = pd.read_excel(path, header=None)
+                
+                # Find the row containing the headers
+                header_row = self._find_header_row(df_full)
+                if header_row is None:
+                    messagebox.showerror("Erro", "Cabeçalhos não encontrados. O ficheiro deve conter as colunas: NÍVEL, WBS e DESCRIÇÃO.")
+                    return
+                
+                # Re-read the file with the correct header row
+                self.app.df_raw = pd.read_excel(path, header=header_row)
 
-                self.app.col_wbs, self.app.col_desc, self.app.col_nivel = find_wbs_columns(self.app.df_raw)
+                self.app.col_wbs, self.app.col_desc, self.app.col_nivel = find_wbs_columns(self.app.df_raw)               
                 
                 self.app.df_desc0 = self.app.df_raw[self.app.col_desc].copy()
 
                 df = self.app.df_raw.copy()
-                df[self.app.col_nivel] = split_levels(df, self.app.col_nivel)
+                df[self.app.col_nivel] = split_levels(df, self.app.col_nivel)         
+                
                 top = df[df[self.app.col_nivel] == 1][[self.app.col_wbs, self.app.col_desc]].dropna(subset=[self.app.col_wbs])
-                items = [f"{w} — {d}" if isinstance(d, str) and d.strip() else f"{w}"
+                
+                items = [f"{w} – {d}" if isinstance(d, str) and d.strip() else f"{w}"
                         for w, d in zip(top[self.app.col_wbs], top[self.app.col_desc])]
                 self.section_combo["values"] = items
                 if items:
@@ -118,13 +131,46 @@ class WBSPage(tk.Frame):
                 else:
                     self.section_var.set("")
                 messagebox.showinfo("WBS e descrição", "WBS carregado com sucesso. Selecione uma secção (Nível 1).")
+            
             except Exception as e:
                 messagebox.showerror("Erro", f"Falha a ler o WBS:\n{e}")
+                import traceback
+                traceback.print_exc()
+
+    def _find_header_row(self, df):
+
+        def normalize(text):
+            import unicodedata
+            if not isinstance(text, str):
+                return ""
+            return unicodedata.normalize('NFKD', text).encode('ASCII', 'ignore').decode().lower().strip()
+        
+        target_headers = {"wbs", "nivel"}
+        desc_variants = {"descricao", "desc"}
+        
+        for idx, row in df.iterrows():
+            # Normalize all values in the row
+            row_normalized = {normalize(str(val)) for val in row if pd.notna(val)}
+            
+            # Check if WBS and NÍVEL are present, and at least one description variant is present
+            if target_headers.issubset(row_normalized) and bool(desc_variants & row_normalized):
+                return idx
+        
+        return None
 
     def on_section_selected(self, *_):
         txt = self.section_var.get().strip()
         if not txt: return
-        code = txt.split(" — ")[0].strip()
+        
+        # Extract just the code part (before any separator)
+        # Handle both "01" alone or "01 – ESTALEIRO" format
+        if " – " in txt:
+            code = txt.split(" – ")[0].strip()
+        elif " - " in txt:
+            code = txt.split(" - ")[0].strip()
+        else:
+            code = txt.strip()
+        
         self.path_stack = [code]
         self.level_var.set(2)
         self.current_leaf = None
@@ -167,8 +213,10 @@ class WBSPage(tk.Frame):
     def _render_table_for(self, prefix, level):
         df = self.app.df_raw.copy()
         df[self.app.col_nivel] = split_levels(df, self.app.col_nivel)
-        sub = children_at_level(df, self.app.col_nivel, self.app.col_wbs, self.app.col_desc, prefix, level) \
-              if df is not None else pd.DataFrame(columns=[self.app.col_wbs or "WBS", self.app.col_desc or "Descrição"])
+        
+        
+        sub = children_at_level(df, self.app.col_nivel, self.app.col_wbs, self.app.col_desc, prefix, level)
+        
         for i in self.tree.get_children():
             self.tree.delete(i)
         for _, row in sub.iterrows():
