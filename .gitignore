@@ -44,3 +44,4 @@ build.bat
 #Other
 estrutura.txt
 .editorconfig.txt
+excel_to_mapping.py

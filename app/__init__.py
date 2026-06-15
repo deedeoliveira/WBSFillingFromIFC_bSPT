@@ -2,7 +2,7 @@
 WBS Filling From IFC
 Extração de quantidades de modelos IFC para estruturas WBS
 """
-__version__ = "0.1.1"
+__version__ = "0.2.0"
 __author__ = "Andressa Oliveira <soliveira.andressa@gmail.com>"
 __maintainer__ = "Andressa Oliveira <soliveira.andressa@gmail.com>"
 __copyright__ = "2025, Andressa Oliveira"

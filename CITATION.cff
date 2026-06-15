@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+title: WBSFillingFromIFC_bSPT
+message: If you use this software, please cite it as below.
+authors:
+  - family-names: Oliveira
+    given-names: Andressa
+doi: 10.5281/zenodo.18489649
+version: 0.1.1
+date-released: 2025-12-19
+repository-code: https://github.com/deedeoliveira/WBSFillingFromIFC_bSPT

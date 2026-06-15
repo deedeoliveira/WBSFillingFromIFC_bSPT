@@ -1,172 +1,145 @@
-# app/gui/views/home.py
 import tkinter as tk
 from tkinter import ttk
-import webbrowser
+
 
 class HomePage(tk.Frame):
 
     def __init__(self, master, app):
         super().__init__(master)
         self.app = app
-        self._q2_built = False
+        self._q2_frame = None
+        self._q3_frame = None
         self._build_ui()
 
     def _build_ui(self):
         self.grid_columnconfigure(0, weight=1)
 
-        title = tk.Label(self, text="Bem-vindo!", font=("Segoe UI", 14, "bold"))
-        title.grid(row=0, column=0, sticky="w", padx=16, pady=(16, 6))
-
-        msg = (           
-            "A aplicação é dividida em três abas que podem ser utilizadas em sequência ou separadamente:\n"
-            "• WBS e descrição: Carregue o WBS da buildingSMARTPortugal (.xls) e preencha as descrições dos itens.\n"
-            "• Mapeamento IFC: À partir de um WBS com descrições (.xls), carregue o IFC (.ifc) e crie as regras que relacionam cada código WBS aos elementos IFC.\n"
-            "• Extrair quantidades e Gerar WBS preenchido: À partir de um WBS com descrições (.xls) e um mapeamento (.json), investigue o IFC (.ifc) para extração de quantidades.\n\n"
-            "Responda às perguntas abaixo para seguir para a etapa certa."
-        )
-        tk.Label(self, text=msg, justify="left", wraplength=900).grid(
-            row=1, column=0, sticky="w", padx=16
-        )
-
-        ttk.Separator(self, orient="horizontal").grid(row=2, column=0, sticky="we", padx=16, pady=(12, 8))
-
-        self.status_frame = tk.Frame(self, bg="#f0f0f0", relief="solid", borderwidth=1)
-        self.status_frame.grid(row=3, column=0, sticky="we", padx=16, pady=(8, 12))
+        hdr = tk.Frame(self, pady=16)
+        hdr.grid(row=0, column=0, sticky="we")
         tk.Label(
-            self.status_frame, text="Estado Atual:", font=("Segoe UI", 10, "bold"), bg="#f0f0f0"
-        ).pack(anchor="w", padx=10, pady=(8, 4))
-        self.status_label = tk.Label(self.status_frame, text="", justify="left", bg="#f0f0f0", fg="#333")
-        self.status_label.pack(anchor="w", padx=10, pady=(0, 8))
-
-        self.q1_frame = tk.Frame(self)
-        self.q1_frame.grid(row=4, column=0, sticky="w", padx=16, pady=(8, 4))
+            hdr,
+            text="Bem-vindo — Extração de Quantidades IFC → WBS",
+            font=("Segoe UI", 14, "bold"),
+        ).pack()
         tk.Label(
-            self.q1_frame, text="1. Já tem o WBS com descrições dos itens?", font=("Segoe UI", 11, "bold")
-        ).pack(anchor="w")
-        q1_btns = tk.Frame(self.q1_frame)
-        q1_btns.pack(anchor="w", pady=(6, 0))
-        tk.Button(q1_btns, text="Não, preciso fazê-lo", command=self._goto_wbs, width=22).pack(side="left")
-        tk.Button(q1_btns, text="Sim, já tenho", command=self._show_q2, width=18).pack(side="left", padx=(8, 0))
+            hdr,
+            text="A aplicação está dividida em três etapas que podem ser realizadas em sequência ou de forma independente.",
+            font=("Segoe UI", 10),
+            fg="#555",
+        ).pack(pady=(4, 0))
 
-        self.q2_frame = tk.Frame(self)
+        steps_lf = tk.LabelFrame(self, text="Como funciona", padx=16, pady=12)
+        steps_lf.grid(row=1, column=0, sticky="we", padx=20, pady=(0, 12))
 
-        ttk.Separator(self, orient="horizontal").grid(
-            row=99, column=0, sticky="we", padx=16, pady=(14, 6)
+        steps = [
+            ("1. WBS e descrição",
+             "Carregue o WBS da buildingSMART Portugal e adicione ou edite as descrições "
+             "customizadas dos itens. Pode começar do zero ou continuar um WBS já parcialmente preenchido."),
+            ("2. Mapeamento IFC",
+             "Associe cada item WBS aos elementos IFC correspondentes. Pode usar um IFC de projeto "
+             "(com dropdowns automáticos) ou definir o mapeamento manualmente para uso genérico."),
+            ("3. Extrair quantidades e gerar MQT",
+             "Com o WBS e o mapeamento prontos, extraia as quantidades do modelo IFC "
+             "e gere os ficheiros de output."),
+        ]
+        for title, desc in steps:
+            row = tk.Frame(steps_lf)
+            row.pack(fill="x", pady=4)
+            tk.Label(row, text=title, font=("Segoe UI", 10, "bold"), width=32, anchor="w").pack(side="left")
+            tk.Label(row, text=desc, font=("Segoe UI", 10), fg="#333",
+                     wraplength=720, justify="left", anchor="w").pack(side="left", fill="x", expand=True)
+
+        q_frame = tk.LabelFrame(self, text="Responda às perguntas para seguir para a etapa certa",
+                                padx=16, pady=12)
+        q_frame.grid(row=2, column=0, sticky="we", padx=20, pady=(0, 12))
+
+        self._build_question(
+            q_frame,
+            text="Pretende criar ou editar um WBS com descrições customizadas?",
+            yes_label="Sim, quero criar ou editar",
+            yes_cmd=lambda: self.app.notebook.select(1),
+            no_label="Não, já tenho um WBS pronto",
+            no_cmd=self._show_q2,
         )
 
-        footer = tk.Frame(self)
-        footer.grid(row=100, column=0, sticky="we", padx=16, pady=(0, 12))
-        footer.grid_columnconfigure(0, weight=1)
-
-        def _open(url: str):
-            webbrowser.open(url)
-
-        lbl_proj = tk.Label(
-            footer,
-            text="Projeto da buildingSMART Portugal",
-            fg="#666666",
-            font=("Segoe UI", 9, "underline"),
-            cursor="hand2",
+        self._q2_frame = self._build_question(
+            q_frame,
+            text="Pretende criar ou editar um mapeamento WBSxIFC?",
+            yes_label="Sim, quero criar ou editar o mapeamento",
+            yes_cmd=lambda: self.app.notebook.select(2),
+            no_label="Não, já tenho um mapeamento pronto",
+            no_cmd=self._show_q3,
+            hidden=True,
         )
-        lbl_proj.grid(row=0, column=0, sticky="w")
-        lbl_proj.bind("<Button-1>", lambda _e: _open("https://buildingsmart.pt/"))
 
-        lbl_dev = tk.Label(
-            footer,
-            text="Desenvolvido por Andressa Oliveira",
-            fg="#666666",
-            font=("Segoe UI", 9, "underline"),
-            cursor="hand2",
+        self._q3_frame = self._build_question(
+            q_frame,
+            text="Pretende extrair quantidades de um ficheiro IFC e gerar MQT?",
+            yes_label="Sim, avançar para extração",
+            yes_cmd=lambda: self.app.notebook.select(3),
+            no_label=None,
+            no_cmd=None,
+            hidden=True,
         )
-        lbl_dev.grid(row=1, column=0, sticky="w")
-        lbl_dev.bind("<Button-1>", lambda _e: _open("https://www.linkedin.com/in/andoliveira/"))
 
-        self._refresh_status()
+        footer = tk.Frame(self, pady=12)
+        footer.grid(row=99, column=0, sticky="we", padx=20)
 
-    def refresh_on_show(self):
-        self._refresh_status()
+        def _link(text, url, pady=(0, 0)):
+            lnk = tk.Label(
+                footer, text=text,
+                fg="#888", cursor="hand2",
+                font=("Segoe UI", 9, "underline"), anchor="w",
+            )
+            lnk.pack(anchor="w", pady=pady)
+            lnk.bind("<Button-1>", lambda e, u=url: self._open_url(u))
 
-    def _refresh_status(self):
-        wbs_ok = self.app.has_user_descriptions() or self.app.wbs_finalized
-        map_ok = self.app.has_ifc_mapping()
+        _link(
+            "Aceda ao guida do utilizador desta aplicação",
+            "https://github.com/deedeoliveira/WBSFillingFromIFC_bSPT/blob/main/docs/user-guide.md",
+        )
+        _link(
+            "Aceda ao código-fonte no GitHub",
+            "https://github.com/deedeoliveira/WBSFillingFromIFC_bSPT",
+        )
+        _link(
+            "Desenvolvido por Andressa Oliveira",
+            "https://www.linkedin.com/in/andoliveira/",
+            pady=(4, 0),
+        )
 
-        status_parts = []
-        
-        if wbs_ok:
-            status_parts.append("WBS com descrições: OK")
-        else:
-            status_parts.append("WBS com descrições: em falta")
-        
-        if map_ok:
-            status_parts.append("Mapeamento IFC: OK")
-        else:
-            status_parts.append("Mapeamento IFC: em falta")
-        
-        status_text = "\n".join(status_parts)
-        self.status_label.config(text=status_text)
+    def _build_question(self, parent, text, yes_label, yes_cmd,
+                        no_label, no_cmd, hidden=False):
+        frame = tk.Frame(parent, pady=6)
+        frame.pack(fill="x")
 
-        if wbs_ok and map_ok:
-            self._show_shortcut_to_extract()
+        tk.Label(frame, text=text, font=("Segoe UI", 10, "bold"),
+                 anchor="w").pack(anchor="w")
 
-    def _goto_wbs(self):
-        self.app.go_wbs()
+        btn_row = tk.Frame(frame)
+        btn_row.pack(anchor="w", pady=(4, 0))
+
+        tk.Button(btn_row, text=yes_label, width=38,
+                  command=yes_cmd).pack(side="left", padx=(0, 8))
+
+        if no_label and no_cmd:
+            tk.Button(btn_row, text=no_label, width=38,
+                      command=no_cmd).pack(side="left")
+
+        if hidden:
+            frame.pack_forget()
+
+        return frame
 
     def _show_q2(self):
-        if self._q2_built:
-            self.q2_frame.grid(row=5, column=0, sticky="w", padx=16, pady=(12, 4))
-            return
+        self._q2_frame.pack(fill="x")
 
-        self._q2_built = True
-        self.q2_frame.grid(row=5, column=0, sticky="w", padx=16, pady=(12, 4))
+    def _show_q3(self):
+        self._q3_frame.pack(fill="x")
 
-        tk.Label(
-            self.q2_frame, 
-            text="2. Já tem o mapeamento entre WBS e IFC?",
-            font=("Segoe UI", 11, "bold")
-        ).pack(anchor="w")
-
-        q2_btns = tk.Frame(self.q2_frame)
-        q2_btns.pack(anchor="w", pady=(6, 0))
-        
-        tk.Button(
-            q2_btns, 
-            text="Não, preciso configurar",
-            command=lambda: self.app.open_mapping("home"),
-            width=25
-        ).pack(side="left")
-
-        tk.Button(
-            q2_btns, 
-            text="Sim, já tenho",
-            command=lambda: self.app.open_extract("home"),
-            width=18
-        ).pack(side="left", padx=(8, 0))
-
-    def _show_shortcut_to_extract(self):
-        if hasattr(self, "_shortcut_built"):
-            return
-        
-        self._shortcut_built = True
-        
-        shortcut_frame = tk.Frame(self, bg="#d4edda", relief="solid", borderwidth=1)
-        shortcut_frame.grid(row=6, column=0, sticky="we", padx=16, pady=(16, 8))
-        
-        tk.Label(
-            shortcut_frame,
-            text="Tudo pronto! Podes ir diretamente para a extração.",
-            font=("Segoe UI", 10, "bold"),
-            bg="#d4edda",
-            fg="#155724"
-        ).pack(anchor="w", padx=10, pady=(8, 4))
-        
-        tk.Button(
-            shortcut_frame,
-            text="Ir para Extrair Quantidades",
-            command=lambda: self.app.open_extract("home"),
-            bg="#28a745",
-            fg="white",
-            font=("Segoe UI", 10, "bold"),
-            relief="flat",
-            padx=20,
-            pady=8
-        ).pack(anchor="w", padx=10, pady=(4, 8))
+    def _open_url(self, url: str):
+        import webbrowser
+        try:
+            webbrowser.open(url)
+        except Exception:
+            pass
